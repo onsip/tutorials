@@ -4,6 +4,7 @@ function MyApp() {
   this.remoteMedia = document.getElementById('remote-media');
   this.remoteMedia.volume = 0.5;
 
+  this.destinationInput = document.getElementById('destination-input');
   this.inviteButton = document.getElementById('invite-button');
   this.inviteButton.addEventListener('click', this.sendInvite.bind(this), false);
 
@@ -29,10 +30,13 @@ MyApp.prototype = {
   },
 
   sendInvite: function () {
-    var session = this.ua.invite('welcome@onsip.com', this.remoteMedia);
+    var destination = this.destinationInput.value;
+    if (!destination) { return; }
+
+    var session = this.ua.invite(destination, this.remoteMedia);
 
     this.setSession(session);
-    this.inviteButton.disabled = true;
+    this.inviteButton.disabled = true; // TODO - use setStatus. Disable input, too?
   },
 
   setSession: function (session) {
