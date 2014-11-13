@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+
+<!-- 2. Add Identity -->
+<form id="identity">
+  <input type="text" id="address" />
+  <input type="password" id="password" />
+  <button id="auth">Authenticate</button>
+</form>
+
+<!-- 1. Add destination -->
+  <input type="text" id="destination"/>
+  <button id="invite">Invite Session</button>
+  <!-- 4. Video-->
+  <video id="remote"></video>
+
+  <button id="volume-up">Raise Volume</button>
+  <button id="volume-down">Lower Volume</button>
+  <button id="mute" class="off">Mute</button>
+
+<script src="http://sipjs.com/download/sip-0.6.3.js"></script>
+<script src="main.js"></script>
+
+<script>
+  if (window.location.hash === '#dev') {
+    var i = 1;
+    window.setInterval(function () { console.log(i); i++; }, 950);
+    window.setTimeout(function () { window.location.reload(); }, 10000);
+  }
+</script>
+</body>
+</html>
