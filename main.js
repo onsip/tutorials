@@ -16,6 +16,9 @@ function MyApp() {
   this.inviteButton = document.getElementById('invite-button');
   this.inviteButton.addEventListener('click', this.sendInvite.bind(this), false);
 
+  this.acceptButton = document.getElementById('accept-button');
+  this.acceptButton.addEventListener('click', this.acceptSession.bind(this), false);
+
   this.terminateButton = document.getElementById('terminate-button');
   this.terminateButton.addEventListener('click', this.terminateSession.bind(this), false);
 
@@ -71,6 +74,27 @@ MyApp.prototype = {
     this.identityForm.style.display = 'none';
     this.userAgentDiv.style.display = 'block';
     this.ua = new SIP.UA(credentials);
+
+    this.ua.on('invite', this.handleInvite.bind(this));
+  },
+
+  handleInvite: function (session) {
+    if (this.session) {
+      session.reject();
+      return;
+    }
+
+    this.setSession(session);
+
+    this.setStatus('Ring Ring! ' + session.remoteIdentity.uri.toString() + ' is calling!', true);
+    this.acceptButton.disabled = false;
+  },
+
+  acceptSession: function () {
+    if (!this.session) { return; }
+
+    this.acceptButton.disabled = true;
+    this.session.accept(this.remoteMedia);
   },
 
   sendInvite: function () {
@@ -113,6 +137,7 @@ MyApp.prototype = {
   setStatus: function (status, disable) {
     this.userAgentDiv.className = status;
     this.inviteButton.disabled = disable;
+    this.terminateButton.disabled = !disable;
   },
 
   terminateSession: function () {
