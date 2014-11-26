@@ -6,7 +6,13 @@
   </head>
   <body>
 
-    <div id="user-agent">
+    <form id="identity-form">
+      <label>SIP Address <input type="text" id="address-input"/></label>
+      <label>Password <input type="password" id="password-input"/></label>
+      <button id="auth-button">Authenticate</button>
+    </form>
+
+    <div id="user-agent" style="display: none">
       <label>SIP Address <input type="text" id="destination-input"/></label>
       <button id="invite-button">Invite Session</button>
       <audio id="remote-media"></audio>
