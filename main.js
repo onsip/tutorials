@@ -1,5 +1,13 @@
 /* This is the MyApp constructor. */
 function MyApp() {
+  this.addressInput = document.getElementById('address-input');
+  this.passwordInput = document.getElementById('password-input');
+  this.identityForm = document.getElementById('identity-form');
+  this.identityForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    this.requestCredentials();
+  }.bind(this), false);
+
   this.userAgentDiv = document.getElementById('user-agent');
   this.remoteMedia = document.getElementById('remote-media');
   this.remoteMedia.volume = 0.5;
@@ -25,8 +33,41 @@ function MyApp() {
 /* This is the MyApp prototype. */
 MyApp.prototype = {
 
-  createUA: function () {
-    this.ua = new SIP.UA();
+  requestCredentials: function () {
+    var xhr = new XMLHttpRequest();
+    xhr.onload = this.setCredentials.bind(this);
+    xhr.open('get', 'https://api.onsip.com/api/?Action=UserRead&Output=json');
+
+    var userPass = this.addressInput.value + ':' + this.passwordInput.value;
+    xhr.setRequestHeader('Authorization',
+                         'Basic ' + btoa(userPass));
+    xhr.send();
+  },
+
+  setCredentials: function (e) {
+    var xhr = e.target;
+    var user, credentials;
+
+    if (xhr.status === 200) {
+      user = JSON.parse(xhr.responseText).Response.Result.UserRead.User;
+      credentials = {
+        uri: this.addressInput.value,
+        authorizationUser: user.AuthUsername,
+        password: user.Password,
+        displayName: user.Contact.Name
+      };
+    } else {
+      alert('Authentication failed! Proceeding as anonymous.');
+      credentials = {};
+    }
+
+    this.createUA(credentials);
+  },
+
+  createUA: function (credentials) {
+    this.identityForm.style.display = 'none';
+    this.userAgentDiv.style.display = 'block';
+    this.ua = new SIP.UA(credentials);
   },
 
   sendInvite: function () {
@@ -108,4 +149,3 @@ MyApp.prototype = {
 };
 
 var MyApp = new MyApp();
-MyApp.createUA();
