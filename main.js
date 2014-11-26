@@ -2,6 +2,7 @@
 function MyApp() {
   this.userAgentDiv = document.getElementById('user-agent');
   this.remoteMedia = document.getElementById('remote-media');
+  this.remoteMedia.volume = 0.5;
 
   this.inviteButton = document.getElementById('invite-button');
   this.inviteButton.addEventListener('click', this.sendInvite.bind(this), false);
@@ -12,6 +13,12 @@ function MyApp() {
   document.addEventListener('keydown', function (e) {
     this.sendDTMF(String.fromCharCode(e.keyCode));
   }.bind(this), false);
+
+  this.volumeRange = document.getElementById('volume-range');
+  this.volumeRange.addEventListener('change', this.setVolume.bind(this), false);
+
+  this.muteButton = document.getElementById('mute-button');
+  this.muteButton.addEventListener('click', this.toggleMute.bind(this), false);
 }
 
 /* This is the MyApp prototype. */
@@ -74,6 +81,23 @@ MyApp.prototype = {
   sendDTMF: function (tone) {
     if (this.session) {
       this.session.dtmf(tone);
+    }
+  },
+
+  setVolume: function () {
+    console.log('Setting volume:', this.volumeRange.value, parseInt(this.volumeRange.value, 10));
+    this.remoteMedia.volume = (parseInt(this.volumeRange.value, 10) || 0) / 100;
+  },
+
+  toggleMute: function () {
+    if (!this.session) { return; }
+
+    if (this.muteButton.classList.contains('on')) {
+      this.session.unmute();
+      this.muteButton.classList.remove('on');
+    } else {
+      this.session.mute();
+      this.muteButton.classList.add('on');
     }
   },
 
