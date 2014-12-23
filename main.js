@@ -8,6 +8,10 @@ function MyApp() {
 
   this.terminateButton = document.getElementById('terminate-button');
   this.terminateButton.addEventListener('click', this.terminateSession.bind(this), false);
+
+  document.addEventListener('keydown', function (e) {
+    this.sendDTMF(String.fromCharCode(e.keyCode));
+  }.bind(this), false);
 }
 
 /* This is the MyApp prototype. */
@@ -47,19 +51,30 @@ MyApp.prototype = {
       }
     }.bind(this));
 
+    session.on('refer', session.followRefer(function (req, newSession) {
+      this.setStatus('refer', true);
+      this.setSession(newSession);
+    }.bind(this)));
+
     this.session = session;
   },
 
   setStatus: function (status, disable) {
-    this.inviteButton.innerHTML = status;
+    this.userAgentDiv.className = status;
     this.inviteButton.disabled = disable;
     this.terminateButton.disabled = !disable;
   },
 
   terminateSession: function () {
-      if (!this.session) { return; }
+    if (!this.session) { return; }
 
-      this.session.terminate();
+    this.session.terminate();
+  },
+
+  sendDTMF: function (tone) {
+    if (this.session) {
+      this.session.dtmf(tone);
+    }
   },
 
 };
