@@ -1,0 +1,260 @@
+/**
+ *
+ * Resets and components
+ *
+ **/
+html, body {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+html {
+    font-size: 100%;
+}
+
+body {
+    background: rgb(235, 237, 238);
+    font-size: 1em;
+    color: white;
+}
+
+body.b-instaphone {
+    background: rgb(111, 126, 149);
+}
+
+button {
+    font-size: inherit;
+    background: #FF5700 no-repeat center center;
+/*    background: rgb(239, 131, 3) no-repeat center center;*/
+    border: none;
+    color: white;
+    line-height: 1em;
+    padding: 0.5em;
+    cursor: pointer;
+    height: 2em;
+
+    -webkit-appearance: none;
+}
+
+button:disabled,
+#accept-button:disabled, #terminate-button:disabled,
+#accept-button:disabled:hover, #terminate-button:disabled:hover {
+    cursor: default;
+    /*    background-color: rgb(162, 100, 0); */
+    background-color: #444444;
+}
+
+input {
+    font-size: inherit;
+}
+
+/**
+ *
+ * Individual positioning
+ *
+ **/
+#user-agent {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('./demo-avatar.png') no-repeat center;
+    background-size: auto 100%;
+}
+
+#accept-button, #terminate-button {
+    position: absolute;
+    bottom: 0.5em;
+    width: 25%;
+    height: 2em;
+    overflow: hidden;
+}
+
+#accept-button {
+    left: 12.5%;
+}
+
+#accept-button {
+    background-color: #2ac56c;
+}
+
+#accept-button:hover {
+    background-color: #17aa56;
+}
+
+#accept-button:active {
+    background-color: #0b8b42;
+}
+
+#terminate-button {
+    background-color: #f06060;
+}
+
+#terminate-button:hover {
+    background-color: #cb4e4e;
+}
+
+#terminate-button:active {
+    background-color: #ab3c3c;
+}
+
+
+
+#terminate-button {
+    right: 12.5%;
+}
+
+#volume-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3em;
+    width: 100%;
+    background: white;
+    display: none;
+}
+
+#volume-up, #volume-down, #mute-button {
+    position: absolute;
+    bottom: 0.5em;
+    width: 20%;
+    background-size: auto 2.5em;
+    text-indent: -1000%;
+    overflow: hidden;
+}
+
+#volume-up {
+    background-image: url('./volume-up.png');
+    left: 10%;
+}
+
+#volume-down {
+    background-image: url('./volume-down.png');
+    left: 40%;
+}
+
+#mute-button {
+    background-image: url('./mic-mute.png');
+    right: 10%;
+}
+
+#invite-button {
+    position: absolute;
+
+    left: 25%;
+    width: 50%;
+
+    top: 50%;
+    margin-top: -1.5em;
+}
+
+#remote-media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: transparent;
+    pointer-events: none;
+}
+
+#identity-form {
+    position: absolute;
+    left: 25%;
+    width: 50%;
+
+    top: 50%;
+    margin-top: -4.5em;
+}
+
+#identity-form * {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 auto 0.5em auto;
+}
+
+#identity-form * + * {
+    margin-top: 0.5em;
+}
+
+#user-agent > label {
+/* #destination-input {*/
+    position: absolute;
+    left: 25%;
+    width: 50%;
+
+    top: 50%;
+    margin-top: -5em;
+
+    box-sizing: border-box;
+}
+
+#destination-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/**
+ *
+ * State Machine adjustments
+ *
+ **/
+.progress {
+
+}
+
+.progress > label,
+.progress #invite-button,
+.accepted > label,
+.accepted #invite-button {
+    display: none;
+}
+
+.accepted {
+
+}
+
+.accepted #accept-button, .accepted #terminate-button {
+    bottom: 3.5em;
+}
+
+.accepted #volume-bar {
+    display: block;
+}
+
+.failed, .bye {
+
+}
+
+
+
+#user-agent:before {
+    content: 'State 0: Initialized';
+    color: darkred;
+}
+
+#user-agent.progress:before {
+    content: 'State 1: Progress/Ringing';
+}
+
+#user-agent.accepted:before {
+    content: 'State 2: Accepted/Connected';
+}
+
+#user-agent.failed:before {
+    content: 'State 3: Failed. Ready for new session.';
+}
+
+#user-agent.bye:before {
+    content: 'State 4: Bye. Ready for new session.';
+}
+
+#user-agent.refer:before {
+    content: 'State 5: Just got referred.';
+}
