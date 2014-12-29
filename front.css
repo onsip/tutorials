@@ -1,0 +1,5 @@
+#identity-form,
+#user-agent > label,
+#invite-button {
+    display: none;
+}
