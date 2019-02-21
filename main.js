@@ -26,11 +26,8 @@ function MyApp() {
     this.sendDTMF(String.fromCharCode(e.keyCode));
   }.bind(this), false);
 
-  this.volumeUp = document.getElementById('volume-up');
-  this.volumeUp.addEventListener('click', this.raiseVolume.bind(this), false);
-
-  this.volumeDown = document.getElementById('volume-down');
-  this.volumeDown.addEventListener('click', this.lowerVolume.bind(this), false);
+  this.volumeRange = document.getElementById('volume-range');
+  this.volumeRange.addEventListener('change', this.setVolume.bind(this), false);
 
   this.muteButton = document.getElementById('mute-button');
   this.muteButton.addEventListener('click', this.toggleMute.bind(this), false);
@@ -73,17 +70,20 @@ MyApp.prototype = {
   createUA: function (credentials) {
     this.identityForm.style.display = 'none';
     this.userAgentDiv.style.display = 'block';
-    this.ua = new SIP.UA(credentials);
+    this.simple = new SIP.Web.Simple({
+      ua: credentials,
+      media: {
+        remote: {
+          video: this.remoteMedia,
+          audio: this.remoteMedia
+        }
+      }
+    });
 
-    this.ua.on('invite', this.handleInvite.bind(this));
+    this.simple.on('ringing', this.handleInvite.bind(this));
   },
 
   handleInvite: function (session) {
-    if (this.session) {
-      session.reject();
-      return;
-    }
-
     this.setSession(session);
 
     this.setStatus('Ring Ring! ' + session.remoteIdentity.uri.toString() + ' is calling!', true);
@@ -91,17 +91,16 @@ MyApp.prototype = {
   },
 
   acceptSession: function () {
-    if (!this.session) { return; }
 
     this.acceptButton.disabled = true;
-    this.session.accept(this.remoteMedia);
+    this.simple.answer();
   },
 
   sendInvite: function () {
     var destination = this.destinationInput.value;
     if (!destination) { return; }
 
-    var session = this.ua.invite(destination, this.remoteMedia);
+    var session = this.simple.call(destination);
 
     this.setSession(session);
     this.inviteButton.disabled = true; // TODO - use setStatus. Disable input, too?
@@ -118,18 +117,15 @@ MyApp.prototype = {
 
     session.on('failed', function () {
       this.setStatus('failed', false);
+      this.acceptButton.disabled = true;
       delete this.session;
     }.bind(this));
 
     session.on('bye', function () {
       this.setStatus('bye', false);
+      this.acceptButton.disabled = true;
       delete this.session;
     }.bind(this));
-
-    session.on('refer', session.followRefer(function (req, newSession) {
-      this.setStatus('refer', true);
-      this.setSession(newSession);
-    }.bind(this)));
 
     this.session = session;
   },
@@ -141,49 +137,25 @@ MyApp.prototype = {
   },
 
   terminateSession: function () {
-    if (!this.session) { return; }
-
-    this.session.terminate();
+    this.simple.hangup();
   },
 
   sendDTMF: function (tone) {
-    if (this.session) {
-      this.session.dtmf(tone);
-    }
+    this.simple.sendDTMF(tone);
   },
 
-  raiseVolume: function () {
-    this.volumeDown.disabled = false;
-
-    /* If volume is very high, jump to max to avoid rounding errors. */
-    if (this.remoteMedia.volume >= .85) {
-      this.remoteMedia.volume = 1;
-      this.volumeUp.disabled = true;
-    } else {
-      this.remoteMedia.volume += .1;
-    }
-  },
-
-  lowerVolume: function () {
-    this.volumeUp.disabled = false;
-
-    /* If volume is very low, jump to min to avoid rounding errors. */
-    if (this.remoteMedia.volume <= .15) {
-      this.remoteMedia.volume = 0;
-      this.volumeDown.disabled = true;
-    } else {
-      this.remoteMedia.volume -= .1;
-    }
+  setVolume: function () {
+    console.log('Setting volume:', this.volumeRange.value, parseInt(this.volumeRange.value, 10));
+    this.remoteMedia.volume = (parseInt(this.volumeRange.value, 10) || 0) / 100;
   },
 
   toggleMute: function () {
-    if (!this.session) { return; }
 
     if (this.muteButton.classList.contains('on')) {
-      this.session.unmute();
+      this.simple.unmute();
       this.muteButton.classList.remove('on');
     } else {
-      this.session.mute();
+      this.simple.mute();
       this.muteButton.classList.add('on');
     }
   },
