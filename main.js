@@ -14,11 +14,8 @@ function MyApp() {
     this.sendDTMF(String.fromCharCode(e.keyCode));
   }.bind(this), false);
 
-  this.volumeUp = document.getElementById('volume-up');
-  this.volumeUp.addEventListener('click', this.raiseVolume.bind(this), false);
-
-  this.volumeDown = document.getElementById('volume-down');
-  this.volumeDown.addEventListener('click', this.lowerVolume.bind(this), false);
+  this.volumeRange = document.getElementById('volume-range');
+  this.volumeRange.addEventListener('change', this.setVolume.bind(this), false);
 
   this.muteButton = document.getElementById('mute-button');
   this.muteButton.addEventListener('click', this.toggleMute.bind(this), false);
@@ -27,12 +24,17 @@ function MyApp() {
 /* This is the MyApp prototype. */
 MyApp.prototype = {
 
-  createUA: function () {
-    this.ua = new SIP.UA();
+  createUA: function (options) {
+    options = options || {};
+    options.media = options.media || {};
+    options.media.remote = options.media.remote || {};
+    options.media.remote.video = this.remoteMedia;
+    options.media.remote.audio = this.remoteMedia;
+    this.simple = new SIP.Web.Simple(options);
   },
 
   sendInvite: function () {
-    var session = this.ua.invite('welcome@onsip.com', this.remoteMedia);
+    var session = this.simple.call('welcome@onsip.com');
 
     this.setSession(session);
     this.inviteButton.disabled = true;
@@ -57,63 +59,34 @@ MyApp.prototype = {
       delete this.session;
     }.bind(this));
 
-    session.on('refer', session.followRefer(function (req, newSession) {
-      this.setStatus('refer', true);
-      this.setSession(newSession);
-    }.bind(this)));
-
     this.session = session;
   },
 
   setStatus: function (status, disable) {
     this.userAgentDiv.className = status;
     this.inviteButton.disabled = disable;
+    this.terminateButton.disabled = !disable;
   },
 
-  terminateSession: function () {
-    if (!this.session) { return; }
-
-    this.session.terminate();
+  terminateSession: function () {    
+    this.simple.hangup();
   },
 
   sendDTMF: function (tone) {
-    if (this.session) {
-      this.session.dtmf(tone);
-    }
+    this.simple.sendDTMF(tone);
   },
 
-  raiseVolume: function () {
-    this.volumeDown.disabled = false;
-
-    /* If volume is very high, jump to max to avoid rounding errors. */
-    if (this.remoteMedia.volume >= .85) {
-      this.remoteMedia.volume = 1;
-      this.volumeUp.disabled = true;
-    } else {
-      this.remoteMedia.volume += .1;
-    }
-  },
-
-  lowerVolume: function () {
-    this.volumeUp.disabled = false;
-
-    /* If volume is very low, jump to min to avoid rounding errors. */
-    if (this.remoteMedia.volume <= .15) {
-      this.remoteMedia.volume = 0;
-      this.volumeDown.disabled = true;
-    } else {
-      this.remoteMedia.volume -= .1;
-    }
+  setVolume: function () {
+    console.log('Setting volume:', this.volumeRange.value, parseInt(this.volumeRange.value, 10));
+    this.remoteMedia.volume = (parseInt(this.volumeRange.value, 10) || 0) / 100;
   },
 
   toggleMute: function () {
-    if (!this.session) { return; }
-
     if (this.muteButton.classList.contains('on')) {
-      this.session.unmute();
+      this.simple.unmute();
       this.muteButton.classList.remove('on');
     } else {
-      this.session.mute();
+      this.simple.mute();
       this.muteButton.classList.add('on');
     }
   },
@@ -121,4 +94,8 @@ MyApp.prototype = {
 };
 
 var MyApp = new MyApp();
-MyApp.createUA();
+MyApp.createUA({
+  ua: {
+    traceSip: true
+  }
+});
