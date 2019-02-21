@@ -1,23 +1,23 @@
 // 4. Create a user agent and connect.
-var ua = new SIP.UA({ traceSip: true });
 var inviteButton = document.getElementById('invite');
 var remoteMedia = document.getElementById('remote');
+var ua = new SIP.Web.Simple({
+  ua: {
+    traceSip: true
+  },
+  media: {
+    remote: {
+      audio: remoteMedia
+    }
+  }
+});
 remoteMedia.volume = 0.5;
 var session;
 
 // 5. Send invite on button click.
 inviteButton.addEventListener('click', function () {
   inviteButton.disabled = true;
-  session = ua.invite('welcome@onsip.com', {
-    media: {
-      constraints: { audio: true, video: false },
-      render: {
-        remote: {
-          audio: remoteMedia
-        }
-      }
-    }
-  });
+  session = ua.call('welcome@onsip.com');
 
   addListeners();
 }, false);
@@ -43,22 +43,13 @@ function addListeners() {
     inviteButton.innerHTML = 'Bye! Invite Another?';
     inviteButton.disabled = false;
   });
-
-  session.on('refer', session.followRefer(function (request, newSession) {
-    inviteButton.innerHTML = 'Ringing...';
-    inviteButton.disabled = true;
-    session = newSession;
-    addListeners();
-  }));
 }
 
   // 6. Keyboard input for DTMF.
 document.addEventListener('keydown', function (e) {
   var dtmfTone = String.fromCharCode(e.keyCode);
 
-  if (session) {
-    session.dtmf(dtmfTone);
-  }
+  ua.sendDTMF(tone);
 }, false);
 
 var volumeUp = document.getElementById('volume-up');
@@ -90,13 +81,11 @@ volumeDown.addEventListener('click', function () {
 
 var mute = document.getElementById('mute');
 mute.addEventListener('click', function () {
-  if (!session) { return; }
-
   if (mute.classList.contains('on')) {
-    session.unmute();
+    ua.unmute();
     mute.classList.remove('on');
   } else {
-    session.mute();
+    ua.mute();
     mute.classList.add('on');
   }
 }, false);
