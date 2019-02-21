@@ -6,6 +6,11 @@ var authButton = document.getElementById('auth');
 var ua;
 var session;
 
+var destination = document.getElementById('destination'); // 1.
+var inviteButton = document.getElementById('invite');
+var remoteMedia = document.getElementById('remote');
+remoteMedia.volume = 0.5;
+
 identityForm.addEventListener('submit', function (e) {
   e.preventDefault();
 
@@ -32,41 +37,27 @@ function authHandler(e) {
       traceSip: true
     };
 
-    ua = new SIP.UA(credentials);
+    var media = { remote: { audio: remoteMedia, video: remoteMedia } };
+    
+    ua = new SIP.Web.Simple({
+      ua: credentials,
+      media: media
+    });
   } else {
     // Authentication failed.  Be anonymous.
     alert('Authentication failed! Proceeding as anonymous.');
-    ua = new SIP.UA({ traceSip: true });
+    ua = new SIP.UA({ ua: { traceSip: true }, media: media });
   }
 
   identityForm.style.display = 'none';
 
   // 3.
-  ua.on('invite', function (s) {
-    if (session) {
-      s.reject();
-      return;
-    }
+  ua.on('ringing', function (s) {
     session = s;
     addListeners();
-    s.accept({
-      media: {
-        constraints: { audio: true, video: true },
-        render: {
-          remote: {
-            video: remoteMedia
-          }
-        }
-      }
-    }); // TODO - real UI.
+    ua.answer();
   });
 }
-
-
-var destination = document.getElementById('destination'); // 1.
-var inviteButton = document.getElementById('invite');
-var remoteMedia = document.getElementById('remote');
-remoteMedia.volume = 0.5;
 
 
 // 1.
@@ -75,16 +66,7 @@ inviteButton.addEventListener('click', function () {
 
   inviteButton.disabled = true;
 
-  session = ua.invite(destination.value, {
-    media: {
-      constraints: { audio: true, video: true },
-      render: {
-        remote: {
-          video: remoteMedia
-        }
-      }
-    }
-  });
+  session = ua.call(destination.value);
 
   addListeners();
 }, false);
@@ -125,9 +107,9 @@ function addListeners() {
 
 document.addEventListener('keydown', function (e) {
   var dtmfTone = String.fromCharCode(e.keyCode);
-
-  if (session) {
-    session.dtmf(dtmfTone);
+  
+  if (ua) {
+    ua.sendDTMF(dtmfTone);
   }
 }, false);
 
@@ -160,13 +142,11 @@ volumeDown.addEventListener('click', function () {
 
 var mute = document.getElementById('mute');
 mute.addEventListener('click', function () {
-  if (!session) { return; }
-
   if (mute.classList.contains('on')) {
-    session.unmute();
+    ua.unmute();
     mute.classList.remove('on');
   } else {
-    session.mute();
+    ua.mute();
     mute.classList.add('on');
   }
 }, false);
